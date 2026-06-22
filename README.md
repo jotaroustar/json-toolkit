@@ -47,6 +47,4 @@
 - [x] 涉及规则引擎/大文件：Web Worker 防卡死（解析层）+ 渲染层自动降级
 - [x] 高亮联动：本工具用节点级直接 DOM 引用定位（非字符位置切片），架构上规避了"去标签还原=原文"的校验场景
 
-## 部署
-
-见 [DEPLOY.md](./DEPLOY.md)。
+© 2026 jotarou.com. All rights reserved. Unauthorized copying or commercial use is prohibited.
