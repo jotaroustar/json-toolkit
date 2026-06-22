@@ -1,0 +1,1694 @@
+<!-- Copyright © 2026 jotarou.com. All rights reserved. Unauthorized copying or commercial use is prohibited. -->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JSON 工具箱 - jotarou.com</title>
+<style>
+  :root{
+    --bg:#f5f0e8;
+    --bg2:#fffaf2;
+    --tx:#2c1f0e;
+    --tx2:#7a6a52;
+    --ac:#d4622a;
+    --ac2:#b94f1f;
+    --ok:#1f7a30;
+    --ok-bg:#e8f5e9;
+    --warn:#b8860b;
+    --warn-bg:#fdf3dc;
+    --err:#c0392b;
+    --err-bg:#fbe9e7;
+    --bd:#d9cdb8;
+    --mono:'SF Mono',Consolas,'Courier New',monospace;
+  }
+  [data-theme="dark"]{
+    --bg:#1c1610;
+    --bg2:#261f15;
+    --tx:#f0e6d6;
+    --tx2:#a8967c;
+    --ac:#e8753a;
+    --ac2:#ff8a4d;
+    --ok:#5fbf72;
+    --ok-bg:#1c2e1d;
+    --warn:#e0b04a;
+    --warn-bg:#332a14;
+    --err:#e2685a;
+    --err-bg:#3a2220;
+    --bd:#4a3d2a;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;background:var(--bg);color:var(--tx);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    min-height:100vh;
+  }
+  .wrap{max-width:1200px;margin:0 auto;padding:16px;}
+
+  /* header */
+  .hd{display:flex;align-items:center;justify-content:space-between;padding:8px 0 16px;}
+  .hd h1{font-size:18px;margin:0;font-weight:700;}
+  .hd-actions{display:flex;gap:8px;align-items:center;}
+  .icon-btn{
+    width:36px;height:36px;border-radius:8px;border:1px solid var(--bd);
+    background:var(--bg2);color:var(--tx);font-size:16px;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .icon-btn:hover{border-color:var(--ac);}
+
+  .ai-popover{
+    position:absolute;top:44px;right:0;z-index:20;width:260px;
+    background:var(--bg2);border:1px solid var(--bd);border-radius:10px;
+    padding:14px;box-shadow:0 6px 20px rgba(0,0,0,.15);
+  }
+  .ai-popover label{font-size:12px;color:var(--tx2);display:block;margin:8px 0 4px;}
+  .ai-popover label:first-child{margin-top:0;}
+  .ai-popover input{
+    width:100%;padding:7px 10px;border-radius:6px;border:1px solid var(--bd);
+    background:var(--bg);color:var(--tx);font-size:13px;font-family:var(--mono);
+  }
+  .ai-popover-hint{font-size:11px;color:var(--tx2);line-height:1.5;margin:10px 0;}
+
+  /* status bar */
+  .statusbar{
+    display:flex;gap:16px;flex-wrap:wrap;align-items:center;
+    background:var(--bg2);border:1px solid var(--bd);border-radius:10px;
+    padding:10px 14px;margin-bottom:14px;font-size:13px;color:var(--tx2);
+  }
+  .statusbar b{color:var(--tx);font-weight:600;}
+  .statusbar .dot{width:6px;height:6px;border-radius:50%;background:var(--ok);display:inline-block;margin-right:4px;}
+
+  /* tabs */
+  .tabs{display:flex;gap:6px;border-bottom:1px solid var(--bd);margin-bottom:16px;}
+  .tab-btn{
+    padding:10px 16px;border:none;background:none;color:var(--tx2);
+    font-size:14px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;
+    margin-bottom:-1px;
+  }
+  .tab-btn.active{color:var(--ac);border-bottom-color:var(--ac);}
+  .tab-btn.disabled{color:var(--tx2);opacity:.5;cursor:not-allowed;}
+  .tab-btn .soon{font-size:10px;background:var(--bd);color:var(--tx2);border-radius:4px;padding:1px 5px;margin-left:6px;}
+
+  .panel{display:none;}
+  .panel.active{display:block;}
+
+  /* toolbar */
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
+  .btn{
+    padding:7px 14px;border-radius:7px;border:1px solid var(--bd);
+    background:var(--bg2);color:var(--tx);font-size:13px;cursor:pointer;
+  }
+  .btn:hover{border-color:var(--ac);color:var(--ac);}
+  .btn.primary{background:var(--ac);color:#fff;border-color:var(--ac);}
+  .btn.primary:hover{background:var(--ac2);color:#fff;}
+  .btn:disabled{opacity:.5;cursor:not-allowed;}
+
+  textarea{
+    width:100%;min-height:160px;padding:12px;border-radius:8px;
+    border:1px solid var(--bd);background:var(--bg2);color:var(--tx);
+    font-family:var(--mono);font-size:13px;line-height:1.5;resize:vertical;
+  }
+  textarea:focus{outline:none;border-color:var(--ac);}
+
+  /* stats card */
+  .stats{display:flex;gap:20px;flex-wrap:wrap;margin:10px 0;}
+  .stat{background:var(--bg2);border:1px solid var(--bd);border-radius:8px;padding:8px 14px;font-size:12px;color:var(--tx2);}
+  .stat b{display:block;font-size:16px;color:var(--tx);font-family:var(--mono);font-variant-numeric:tabular-nums;}
+
+  /* error banner */
+  .err-banner{
+    display:none;background:var(--err-bg);border:1px solid var(--err);color:var(--err);
+    border-radius:8px;padding:10px 14px;margin:10px 0;font-size:13px;cursor:pointer;
+  }
+  .err-banner.show{display:block;}
+  .err-banner:hover{filter:brightness(0.97);}
+
+  /* tree view */
+  .tree-box{
+    background:var(--bg2);border:1px solid var(--bd);border-radius:8px;
+    padding:14px;margin-top:10px;font-family:var(--mono);font-size:13px;
+    max-height:560px;overflow:auto;
+  }
+  .tree-box.plain{white-space:pre-wrap;word-break:break-all;}
+  .node{margin-left:18px;}
+  .node-row{display:flex;align-items:flex-start;gap:4px;cursor:default;}
+  .toggle{
+    flex-shrink:0;cursor:pointer;color:var(--tx2);user-select:none;
+    font-size:11px;line-height:1;display:inline-block;
+    padding:4px 6px;margin:-4px 0 -4px -6px;border-radius:4px;
+    min-width:14px;text-align:center;
+  }
+  .toggle:hover{background:var(--bd);}
+  .toggle.leaf{visibility:hidden;}
+  .k{color:var(--ac2);}
+  .s{color:var(--ok);}
+  .n{color:#3b6fd4;}
+  [data-theme="dark"] .n{color:#7da3ec;}
+  .b{color:var(--warn);}
+  .nul{color:var(--tx2);font-style:italic;}
+  .punc{color:var(--tx2);}
+  .collapsed-hint{color:var(--tx2);cursor:pointer;}
+  .collapsed-hint:hover{color:var(--ac);}
+  .children.hidden{display:none;}
+
+  /* schema tab */
+  .mode-switch{display:flex;gap:8px;margin-bottom:12px;}
+  .mode-switch .btn.on{background:var(--ac);color:#fff;border-color:var(--ac);}
+  .field-row{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:8px 12px;border:1px solid var(--bd);border-radius:6px;margin-bottom:6px;
+    font-size:13px;background:var(--bg2);
+  }
+  .field-row .path{font-family:var(--mono);color:var(--tx);}
+  .field-row .type{color:var(--tx2);margin-left:8px;}
+  .field-row.bad{border-color:var(--err);background:var(--err-bg);}
+  .field-row.warn{border-color:var(--warn);background:var(--warn-bg);}
+  .tag{font-size:11px;padding:1px 6px;border-radius:4px;}
+  .tag.req{background:var(--ac);color:#fff;}
+  .tag.amb{background:var(--warn);color:#fff;}
+  .amb-info{flex:1;}
+  .ai-mini-btn{font-size:11px;padding:4px 9px;flex-shrink:0;margin-left:10px;}
+  .ai-suggestion{
+    font-size:13px;color:var(--tx);background:var(--bg);border:1px dashed var(--bd);
+    border-radius:6px;padding:8px 12px;margin:-2px 0 8px;line-height:1.5;
+  }
+
+  .toast{
+    position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+    background:var(--tx);color:var(--bg);padding:10px 18px;border-radius:8px;
+    font-size:13px;opacity:0;transition:opacity .25s;pointer-events:none;z-index:99;
+  }
+  .toast.show{opacity:1;}
+
+  /* query tab */
+  .query-layout{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  @media(max-width:820px){.query-layout{grid-template-columns:1fr;}}
+  .query-col h3{font-size:13px;color:var(--tx2);margin:0 0 8px;font-weight:600;}
+  .examples{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0;}
+  .example-chip{
+    font-size:12px;font-family:var(--mono);padding:4px 9px;border-radius:6px;
+    border:1px solid var(--bd);background:var(--bg2);color:var(--tx2);cursor:pointer;
+  }
+  .example-chip:hover{border-color:var(--ac);color:var(--ac);}
+  .history-row{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 0;}
+  .result-row{
+    padding:8px 10px;border:1px solid var(--bd);border-radius:6px;margin-bottom:6px;
+    background:var(--bg2);font-size:13px;cursor:pointer;
+  }
+  .result-row:hover{border-color:var(--ac);}
+  .result-row .rpath{font-family:var(--mono);color:var(--ac2);display:block;font-size:12px;}
+  .result-row .rval{color:var(--tx);font-family:var(--mono);word-break:break-all;}
+  .matched{background:var(--warn-bg)!important;outline:2px solid var(--warn);}
+  .flash{animation:flashAnim .9s ease;}
+  @keyframes flashAnim{
+    0%{background:var(--ac);color:#fff;}
+    100%{background:transparent;}
+  }
+  .result-count{font-size:12px;color:var(--tx2);margin:6px 0;}
+
+  .nl-query-row{display:flex;gap:8px;margin-top:8px;}
+  .nl-query-row input{
+    flex:1;padding:9px 12px;border-radius:8px;border:1px solid var(--bd);
+    background:var(--bg2);color:var(--tx);font-size:13px;
+  }
+  .ai-hint{font-size:11px;color:var(--tx2);margin:6px 0 0;line-height:1.5;}
+  .ai-hint b{color:var(--tx);}
+
+  /* diff tab */
+  .diff-layout{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:10px;}
+  @media(max-width:820px){.diff-layout{grid-template-columns:1fr;}}
+  .diff-col label{font-size:12px;color:var(--tx2);display:block;margin-bottom:4px;}
+  .diff-summary{display:flex;gap:14px;flex-wrap:wrap;margin:12px 0;font-size:13px;}
+  .diff-summary span{display:flex;align-items:center;gap:5px;}
+  .diff-summary .sw{width:10px;height:10px;border-radius:2px;display:inline-block;}
+  .toggle-row{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--tx2);margin:8px 0;}
+  .toggle-row input{cursor:pointer;}
+
+  .node-row.diff-row-added{border-left:3px solid var(--ok);background:var(--ok-bg);padding-left:6px;border-radius:0 4px 4px 0;}
+  .node-row.diff-row-removed{border-left:3px solid var(--err);background:var(--err-bg);padding-left:6px;border-radius:0 4px 4px 0;}
+  .node-row.diff-row-modified{border-left:3px solid var(--warn);background:var(--warn-bg);padding-left:6px;border-radius:0 4px 4px 0;}
+  .node-row.diff-row-unchanged{opacity:.6;}
+  .node-row.diff-row-mixed{border-left:3px solid var(--bd);padding-left:6px;}
+  .diff-old{color:var(--err);text-decoration:line-through;opacity:.85;}
+  .diff-new{color:var(--ok);font-weight:600;}
+  .diff-arrow{color:var(--tx2);margin:0 4px;}
+  .diff-added-val{color:var(--ok);}
+  .diff-removed-val{color:var(--err);text-decoration:line-through;}
+  .diff-unchanged-val{color:var(--tx2);}
+
+  footer{margin-top:30px;padding:16px 0;border-top:1px solid var(--bd);font-size:12px;color:var(--tx2);text-align:center;}
+  footer a{color:var(--tx2);}
+
+  @media(max-width:640px){
+    .stats{gap:10px;}
+    .tree-box{max-height:420px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hd">
+    <h1>JSON 工具箱</h1>
+    <div class="hd-actions" style="position:relative;">
+      <button class="icon-btn" id="aiSettingsBtn" title="AI 设置（API Key）">🔑</button>
+      <button class="icon-btn" id="themeBtn" title="切换主题">🌙</button>
+      <a class="icon-btn" href="/tools/" title="工具列表" style="text-decoration:none;">⊞</a>
+
+      <div id="aiSettingsPopover" class="ai-popover" style="display:none;">
+        <label>API Key</label>
+        <input type="password" id="aiKeyInput" placeholder="sk-...">
+        <label>模型（按需修改）</label>
+        <input type="text" id="aiModelInput" placeholder="deepseek-chat">
+        <p class="ai-popover-hint">仅用于本工具内 Tab2/Tab3 的可选 AI 辅助功能，保存在本机浏览器，不会上传到除 jotarou.com 网关以外的任何地方。</p>
+        <button class="btn primary" id="aiSettingsSave" style="width:100%;">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="statusbar" id="statusbar">
+    <span><span class="dot"></span>当前数据：<b id="stFields">--</b> 字段</span>
+    <span>上次修改于：<b id="stLastTab">格式化</b></span>
+    <span>大小：<b id="stSize">--</b></span>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="format">格式化</button>
+    <button class="tab-btn" data-tab="schema">Schema</button>
+    <button class="tab-btn" data-tab="query">查询</button>
+    <button class="tab-btn" data-tab="diff">Diff</button>
+  </div>
+
+  <!-- Tab 1: 格式化 -->
+  <div class="panel active" id="panel-format">
+    <textarea id="input" placeholder='在此粘贴 JSON，例如 {"name":"jotarou","tools":13}'></textarea>
+
+    <div class="toolbar" style="margin-top:10px;">
+      <button class="btn primary" id="btnParse">格式化 / 解析</button>
+      <button class="btn" id="btnCompress">压缩为单行</button>
+      <button class="btn" id="btnExpandAll">全部展开</button>
+      <button class="btn" id="btnCollapseAll">全部折叠</button>
+      <button class="btn" id="btnCopy">复制结果</button>
+      <button class="btn" id="btnClear">清空</button>
+    </div>
+
+    <div class="err-banner" id="errBanner"></div>
+
+    <div class="stats" id="statsRow" style="display:none;">
+      <div class="stat">字段数<b id="statFields">0</b></div>
+      <div class="stat">最大嵌套深度<b id="statDepth">0</b></div>
+      <div class="stat">数据大小<b id="statSize">0 B</b></div>
+      <div class="stat">渲染模式<b id="statMode">树形</b></div>
+    </div>
+
+    <div id="treeBox" class="tree-box" style="display:none;"></div>
+  </div>
+
+  <!-- Tab 2: Schema -->
+  <div class="panel" id="panel-schema">
+    <div class="mode-switch">
+      <button class="btn on" id="modeValidate" data-mode="validate">校验模式</button>
+      <button class="btn" id="modeGenerate" data-mode="generate">生成模式</button>
+    </div>
+
+    <div id="schemaValidateUI">
+      <p style="font-size:13px;color:var(--tx2);margin:0 0 6px;">粘贴 JSON Schema，校验「格式化」Tab 中当前的 JSON 数据是否符合：</p>
+      <textarea id="schemaInput" placeholder='{"type":"object","required":["name"],"properties":{"name":{"type":"string"}}}' style="min-height:140px;"></textarea>
+      <div class="toolbar" style="margin-top:10px;">
+        <button class="btn primary" id="btnValidate">开始校验</button>
+      </div>
+      <div id="validateResult" style="margin-top:14px;"></div>
+    </div>
+
+    <div id="schemaGenerateUI" style="display:none;">
+      <p style="font-size:13px;color:var(--tx2);margin:0 0 6px;">基于「格式化」Tab 中当前的 JSON 数据，本地推断生成 Schema 草稿（不调用 AI，纯本地规则）：</p>
+      <div class="toolbar">
+        <button class="btn primary" id="btnGenerate">生成 Schema</button>
+        <button class="btn" id="btnCopySchema" style="display:none;">复制 Schema</button>
+      </div>
+      <div id="generateResult" style="margin-top:14px;"></div>
+      <textarea id="schemaOutput" readonly style="display:none;min-height:160px;margin-top:10px;"></textarea>
+    </div>
+  </div>
+
+  <!-- Tab 3: 查询 -->
+  <div class="panel" id="panel-query">
+    <p style="font-size:13px;color:var(--tx2);margin:0 0 6px;">对「格式化」Tab 中当前的 JSON 数据执行 JSONPath 查询（本地实时执行，支持 <code>$.a.b[0]</code> / <code>[*]</code> / <code>..key</code> 递归下降 / 基础过滤 <code>[?(@.x&lt;10)]</code>，不支持完整 JQ 语法）：</p>
+    <input type="text" id="pathInput" placeholder="$.store.book[*].author" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--bd);background:var(--bg2);color:var(--tx);font-family:var(--mono);font-size:13px;">
+    <div class="examples" id="exampleChips"></div>
+
+    <div class="nl-query-row">
+      <input type="text" id="nlQueryInput" placeholder="或用自然语言描述你想查的内容，例如：所有价格低于10的书名">
+      <button class="btn" id="btnNlGenerate">✨ AI 生成表达式</button>
+    </div>
+    <p class="ai-hint">这一步会把数据的<b>结构骨架（仅字段名和类型，不含真实数据）</b>发给 AI 生成表达式，其余功能均为本地处理。</p>
+    <div class="history-row" id="historyRow"></div>
+    <div class="err-banner" id="pathErrBanner"></div>
+
+    <div class="query-layout" style="margin-top:14px;">
+      <div class="query-col">
+        <h3>匹配结果（<span id="resultCountLabel">0</span>）</h3>
+        <div id="resultList" style="max-height:480px;overflow-y:auto;"></div>
+      </div>
+      <div class="query-col">
+        <h3>数据树（hover 结果可定位）</h3>
+        <div id="queryTreeBox" class="tree-box" style="max-height:480px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab 4: Diff -->
+  <div class="panel" id="panel-diff">
+    <p style="font-size:13px;color:var(--tx2);margin:0 0 10px;">结构化对比两份 JSON（按字段 key 比较，不是纯文本逐行diff），数组按下标对齐——这是简化版算法，不做内容重排对齐，复杂重排场景的diff结果可能不够直观。</p>
+
+    <div id="diffInputFull">
+      <div class="diff-layout">
+        <div class="diff-col">
+          <label>旧版本（A）</label>
+          <textarea id="diffA" style="min-height:160px;" placeholder='{"name":"old"}'></textarea>
+          <button class="btn" id="btnFillA" style="margin-top:6px;">用「格式化」当前数据填入</button>
+        </div>
+        <div class="diff-col">
+          <label>新版本（B）</label>
+          <textarea id="diffB" style="min-height:160px;" placeholder='{"name":"new"}'></textarea>
+          <button class="btn" id="btnFillB" style="margin-top:6px;">用「格式化」当前数据填入</button>
+        </div>
+      </div>
+      <div class="toolbar">
+        <button class="btn primary" id="btnDiffRun">开始对比</button>
+      </div>
+    </div>
+
+    <div id="diffInputCollapsed" style="display:none;" class="statusbar">
+      <span id="diffCollapsedSummary"></span>
+      <button class="btn" id="btnExpandDiffInput">展开输入</button>
+    </div>
+
+    <div class="err-banner" id="diffErrBanner"></div>
+
+    <div class="diff-summary" id="diffSummary" style="display:none;">
+      <span><span class="sw" style="background:var(--ok);"></span>新增 <b id="cntAdded">0</b></span>
+      <span><span class="sw" style="background:var(--err);"></span>删除 <b id="cntRemoved">0</b></span>
+      <span><span class="sw" style="background:var(--warn);"></span>修改 <b id="cntModified">0</b></span>
+      <span><span class="sw" style="background:var(--bd);"></span>无变化 <b id="cntUnchanged">0</b></span>
+    </div>
+
+    <div class="toggle-row" id="diffToggleRow" style="display:none;">
+      <input type="checkbox" id="onlyDiffToggle">
+      <label for="onlyDiffToggle">仅看差异（隐藏无变化字段）</label>
+    </div>
+
+    <div id="diffTreeBox" class="tree-box" style="display:none;"></div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <footer>
+    格式化、Schema 推断、JSONPath 查询、Diff 对比的核心引擎均在你的浏览器本地完成，不上传、不经过网络传输。仅当你主动点击「✨ AI 生成表达式」或「💡 问AI」时，才会把数据结构骨架或单个字段的示例值发送给你配置的 AI 接口，其余数据不受影响。
+    <br>© 2026 jotarou.com · <a href="/tools/">返回工具列表</a>
+  </footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------- 工具函数 ---------- */
+  function esc(s){
+    return String(s).replace(/[&<>"']/g, function(c){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+    });
+  }
+
+  function showToast(msg){
+    var t=document.getElementById("toast");
+    t.textContent=msg;
+    t.classList.add("show");
+    setTimeout(function(){ t.classList.remove("show"); }, 1800);
+  }
+
+  function formatBytes(n){
+    if(n<1024) return n+" B";
+    if(n<1024*1024) return (n/1024).toFixed(1)+" KB";
+    return (n/1024/1024).toFixed(2)+" MB";
+  }
+
+  /* ---------- 全局共享状态 ---------- */
+  var state = {
+    data: null,        // 当前解析成功的 JSON（Tab 间共享）
+    raw: "",           // 原始文本
+    fieldCount: 0,
+    lastTab: "格式化"
+  };
+
+  function updateStatusbar(){
+    document.getElementById("stFields").textContent = state.data!==null ? state.fieldCount : "--";
+    document.getElementById("stLastTab").textContent = state.lastTab;
+    document.getElementById("stSize").textContent = state.raw ? formatBytes(new Blob([state.raw]).size) : "--";
+  }
+
+  /* ---------- Tab 切换 ---------- */
+  var tabBtns = document.querySelectorAll(".tab-btn[data-tab]");
+  tabBtns.forEach(function(btn){
+    btn.addEventListener("click", function(){
+      tabBtns.forEach(function(b){ b.classList.remove("active"); });
+      btn.classList.add("active");
+      document.querySelectorAll(".panel").forEach(function(p){ p.classList.remove("active"); });
+      document.getElementById("panel-"+btn.dataset.tab).classList.add("active");
+    });
+  });
+
+  /* ---------- 主题切换 ---------- */
+  var themeBtn = document.getElementById("themeBtn");
+  function applyTheme(t){
+    if(t==="dark"){
+      document.documentElement.setAttribute("data-theme","dark");
+      themeBtn.textContent="☀️";
+    }else{
+      document.documentElement.removeAttribute("data-theme");
+      themeBtn.textContent="🌙";
+    }
+  }
+  var savedTheme = localStorage.getItem("jtr-json-theme") || "light";
+  applyTheme(savedTheme);
+  themeBtn.addEventListener("click", function(){
+    var cur = document.documentElement.getAttribute("data-theme")==="dark" ? "light":"dark";
+    applyTheme(cur);
+    localStorage.setItem("jtr-json-theme", cur);
+  });
+
+  /* =====================================================
+     AI 辅助功能的共享基础设施（Tab2 💡按钮 / Tab3 自然语言生成表达式 共用）
+     接口固定 jotarou.com/v1/chat/completions，OpenAI兼容格式，stream:true + 手动SSE解析
+     ===================================================== */
+
+  var AI_KEY_STORAGE = "jtr-json-ai-key";
+  var AI_MODEL_STORAGE = "jtr-json-ai-model";
+  var DEFAULT_MODEL = "deepseek-chat"; // 占位默认值，部署前请核对你网关实际可用的模型名称
+
+  function getAISettings(){
+    return {
+      key: localStorage.getItem(AI_KEY_STORAGE) || "",
+      model: localStorage.getItem(AI_MODEL_STORAGE) || DEFAULT_MODEL
+    };
+  }
+
+  var aiPopover = document.getElementById("aiSettingsPopover");
+  var aiKeyInput = document.getElementById("aiKeyInput");
+  var aiModelInput = document.getElementById("aiModelInput");
+
+  function openAISettings(){
+    var s = getAISettings();
+    aiKeyInput.value = s.key;
+    aiModelInput.value = s.model;
+    aiPopover.style.display = "block";
+  }
+
+  document.getElementById("aiSettingsBtn").addEventListener("click", function(e){
+    e.stopPropagation();
+    aiPopover.style.display = aiPopover.style.display==="block" ? "none" : "block";
+    if(aiPopover.style.display==="block") openAISettings();
+  });
+  document.addEventListener("click", function(e){
+    if(aiPopover.style.display==="block" && !aiPopover.contains(e.target) && e.target.id!=="aiSettingsBtn"){
+      aiPopover.style.display = "none";
+    }
+  });
+  document.getElementById("aiSettingsSave").addEventListener("click", function(){
+    localStorage.setItem(AI_KEY_STORAGE, aiKeyInput.value.trim());
+    localStorage.setItem(AI_MODEL_STORAGE, aiModelInput.value.trim() || DEFAULT_MODEL);
+    aiPopover.style.display = "none";
+    showToast("AI 设置已保存");
+  });
+
+  // 流式调用 + 手动SSE解析 + JSON解析失败兜底（单行解析失败直接跳过，不让整条流崩掉）
+  function callAI(systemPrompt, userPrompt, onChunk){
+    var settings = getAISettings();
+    if(!settings.key){
+      openAISettings();
+      return Promise.reject(new Error("请先设置 API Key"));
+    }
+
+    return fetch("https://jotarou.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + settings.key
+      },
+      body: JSON.stringify({
+        model: settings.model,
+        stream: true,
+        messages: [
+          {role:"system", content: systemPrompt},
+          {role:"user", content: userPrompt}
+        ]
+      })
+    }).then(function(resp){
+      if(!resp.ok){
+        throw new Error("请求失败，状态码 "+resp.status);
+      }
+      var reader = resp.body.getReader();
+      var decoder = new TextDecoder();
+      var buffer = "";
+      var fullText = "";
+
+      function pump(){
+        return reader.read().then(function(result){
+          if(result.done) return fullText;
+          buffer += decoder.decode(result.value, {stream:true});
+          var lines = buffer.split("\n");
+          buffer = lines.pop(); // 最后一行可能不完整，留到下一次拼接
+          lines.forEach(function(line){
+            line = line.trim();
+            if(!line.startsWith("data:")) return;
+            var data = line.slice(5).trim();
+            if(data === "[DONE]") return;
+            try{
+              var json = JSON.parse(data);
+              var delta = json.choices && json.choices[0] && json.choices[0].delta && json.choices[0].delta.content;
+              if(delta){
+                fullText += delta;
+                if(onChunk) onChunk(delta, fullText);
+              }
+            }catch(e){
+              // 单行JSON解析失败：跳过这一行，不中断整个流——这是手动SSE解析必须做的容错
+            }
+          });
+          return pump();
+        });
+      }
+      return pump();
+    });
+  }
+
+  // 把JSON数据抽成"结构骨架"：只保留字段名和类型，不带真实值，发给AI做自然语言→表达式翻译时
+  // 不需要也不应该看到真实数据。数组只取第一个元素作代表，深度/字段数都做了上限保护避免prompt过大。
+  function buildStructureSkeleton(data, depth){
+    depth = depth || 0;
+    if(depth > 6) return '"...(已截断)"';
+    if(data === null) return "null";
+    if(Array.isArray(data)){
+      if(data.length===0) return "[]";
+      return "[" + buildStructureSkeleton(data[0], depth+1) + ", ...]";
+    }
+    if(typeof data === "object"){
+      var keys = Object.keys(data).slice(0, 60);
+      var parts = keys.map(function(k){ return '"'+k+'": ' + buildStructureSkeleton(data[k], depth+1); });
+      if(Object.keys(data).length > 60) parts.push('"...(已截断更多字段)"');
+      return "{" + parts.join(", ") + "}";
+    }
+    return '"<'+typeof data+'>"'; // 只给类型名，例如 "<string>"，不附带真实值
+  }
+
+  /* =====================================================
+     Tab 1：格式化
+     ===================================================== */
+
+  // 大文件渲染降级阈值。
+  // 注意：这两个数字是开发阶段的保守估计值，不是实测结论。
+  // 上线前必须用真实大 JSON 样本（建议 5MB / 10MB / 20MB 各跑一次）
+  // 在目标设备上实测树形渲染耗时，再回头调整这两个常量。
+  var LARGE_SIZE_BYTES = 2 * 1024 * 1024; // 2MB
+  var LARGE_NODE_COUNT = 5000;
+
+  var inputEl = document.getElementById("input");
+  var errBanner = document.getElementById("errBanner");
+  var treeBox = document.getElementById("treeBox");
+  var statsRow = document.getElementById("statsRow");
+  var lastErrorPos = null; // 记录解析失败时的字符位置，点击错误提示时跳转光标
+
+  function showError(msg, pos){
+    errBanner.textContent = msg + (pos!==undefined && pos!==null ? "（点击此处跳转到出错位置）" : "");
+    errBanner.classList.add("show");
+    lastErrorPos = (pos!==undefined) ? pos : null;
+  }
+  function hideError(){
+    errBanner.classList.remove("show");
+    lastErrorPos = null;
+  }
+
+  // 点击错误提示条 → 把光标移动到出错的字符位置，闭合"错误提示→源码定位"的链路
+  errBanner.addEventListener("click", function(){
+    if(lastErrorPos===null) return;
+    inputEl.focus();
+    inputEl.setSelectionRange(lastErrorPos, lastErrorPos);
+    // 同时尝试让出错位置滚动到可视区域内（textarea没有原生API，用scrollTop估算）
+    var before = inputEl.value.slice(0, lastErrorPos);
+    var lineNum = before.split("\n").length;
+    var lineHeight = parseFloat(getComputedStyle(inputEl).lineHeight) || 19.5;
+    inputEl.scrollTop = Math.max(0, (lineNum - 3) * lineHeight);
+  });
+
+  // 统计字段数 / 最大深度 / 节点总数
+  function walkStats(val, depth){
+    var fields=0, nodes=1, maxDepth=depth;
+    if(val!==null && typeof val==="object"){
+      var keys = Array.isArray(val) ? val.map(function(_,i){return i;}) : Object.keys(val);
+      keys.forEach(function(k){
+        if(!Array.isArray(val)) fields++;
+        var r = walkStats(val[k], depth+1);
+        fields += r.fields;
+        nodes += r.nodes;
+        if(r.maxDepth>maxDepth) maxDepth=r.maxDepth;
+      });
+    }
+    return {fields:fields, nodes:nodes, maxDepth:maxDepth};
+  }
+
+  // 渲染语法高亮的树形节点。每种 token 类型对应的 class
+  // 必须在 CSS 里真的定义了颜色（.k/.s/.n/.b/.nul），写完务必肉眼核对，
+  // 别再出现 class 定义了但没接入渲染逻辑的摆设代码。
+  function renderValue(val, keyHtml, isLast, depth, path){
+    path = path===undefined ? "$" : path;
+    var html = "";
+    var comma = isLast ? "" : '<span class="punc">,</span>';
+    var pathAttr = ' data-path="'+esc(path)+'"';
+
+    if(val===null){
+      return '<div class="node-row"'+pathAttr+'><span class="toggle leaf"></span>'+keyHtml+'<span class="nul">null</span>'+comma+'</div>';
+    }
+    var t = typeof val;
+    if(t==="string"){
+      return '<div class="node-row"'+pathAttr+'><span class="toggle leaf"></span>'+keyHtml+'<span class="s">"'+esc(val)+'"</span>'+comma+'</div>';
+    }
+    if(t==="number"){
+      return '<div class="node-row"'+pathAttr+'><span class="toggle leaf"></span>'+keyHtml+'<span class="n">'+val+'</span>'+comma+'</div>';
+    }
+    if(t==="boolean"){
+      return '<div class="node-row"'+pathAttr+'><span class="toggle leaf"></span>'+keyHtml+'<span class="b">'+val+'</span>'+comma+'</div>';
+    }
+    if(Array.isArray(val) || t==="object"){
+      var isArr = Array.isArray(val);
+      var entries = isArr ? val.map(function(v,i){return [i,v];}) : Object.keys(val).map(function(k){return [k,val[k]];});
+      var open = isArr ? "[" : "{";
+      var close = isArr ? "]" : "}";
+      if(entries.length===0){
+        return '<div class="node-row"'+pathAttr+'><span class="toggle leaf"></span>'+keyHtml+'<span class="punc">'+open+close+'</span>'+comma+'</div>';
+      }
+      var childrenHtml = entries.map(function(pair, idx){
+        var k = pair[0], v = pair[1];
+        var childKeyHtml = isArr ? "" : '<span class="k">"'+esc(k)+'"</span><span class="punc">: </span>';
+        var childPath = isArr ? (path+"["+k+"]") : (path+"."+k);
+        return '<div class="node">'+renderValue(v, childKeyHtml, idx===entries.length-1, depth+1, childPath)+'</div>';
+      }).join("");
+      // 默认折叠到 2 层以内
+      var collapsedByDefault = depth>=2;
+      var hiddenClass = collapsedByDefault ? " hidden" : "";
+      var toggleChar = collapsedByDefault ? "▶" : "▼";
+      return '<div class="node-row"'+pathAttr+'>'+
+               '<span class="toggle" data-toggle>'+toggleChar+'</span>'+
+               keyHtml+
+               '<span class="punc">'+open+'</span>'+
+               '<span class="collapsed-hint" data-collapsed-count="'+entries.length+'" style="display:'+(collapsedByDefault?'inline':'none')+'"> '+entries.length+' 项 </span>'+
+             '</div>'+
+             '<div class="children'+hiddenClass+'">'+childrenHtml+'</div>'+
+             '<div class="punc" style="margin-left:'+(18)+'px;">'+close+comma+'</div>';
+    }
+    return "";
+  }
+
+  // 折叠/展开交互（事件委托）
+  treeBox.addEventListener("click", function(e){
+    var toggle = e.target.closest("[data-toggle]");
+    if(!toggle) return;
+    var row = toggle.closest(".node-row");
+    var children = row.nextElementSibling;
+    var hint = row.querySelector(".collapsed-hint");
+    if(!children || !children.classList.contains("children")) return;
+    var willHide = !children.classList.contains("hidden");
+    children.classList.toggle("hidden");
+    toggle.textContent = willHide ? "▶" : "▼";
+    if(hint) hint.style.display = willHide ? "inline" : "none";
+  });
+
+  function setAllCollapsed(collapsed){
+    treeBox.querySelectorAll(".children").forEach(function(c){
+      c.classList.toggle("hidden", collapsed);
+    });
+    treeBox.querySelectorAll("[data-toggle]").forEach(function(t){
+      t.textContent = collapsed ? "▶" : "▼";
+    });
+    treeBox.querySelectorAll(".collapsed-hint").forEach(function(h){
+      h.style.display = collapsed ? "inline" : "none";
+    });
+  }
+
+  function renderTree(data){
+    var fakeKey = "";
+    treeBox.innerHTML = renderValue(data, fakeKey, true, 0);
+  }
+
+  function renderPlain(data){
+    treeBox.classList.add("plain");
+    treeBox.textContent = JSON.stringify(data, null, 2);
+  }
+
+  function doParse(){
+    var raw = inputEl.value;
+    hideError();
+    treeBox.classList.remove("plain");
+
+    if(!raw.trim()){
+      showError("请输入 JSON 内容");
+      statsRow.style.display="none";
+      treeBox.style.display="none";
+      return;
+    }
+
+    var data;
+    try{
+      data = JSON.parse(raw);
+    }catch(err){
+      // 尝试从错误信息里抠出 position，给出更具体的定位提示
+      var posMatch = /position (\d+)/.exec(err.message);
+      var hint = "";
+      var errPos = null;
+      if(posMatch){
+        errPos = parseInt(posMatch[1],10);
+        var before = raw.slice(0, errPos);
+        var line = before.split("\n").length;
+        var col = errPos - before.lastIndexOf("\n");
+        hint = "（约在第 "+line+" 行，第 "+col+" 列附近）";
+      }
+      showError("JSON 解析失败："+err.message+hint+"。常见原因：多了一个逗号、少了引号、或括号不匹配。", errPos);
+      statsRow.style.display="none";
+      treeBox.style.display="none";
+      return;
+    }
+
+    var byteSize = new Blob([raw]).size;
+    var stats = walkStats(data, 0);
+
+    state.data = data;
+    state.raw = raw;
+    state.fieldCount = stats.fields;
+    state.lastTab = "格式化";
+    updateStatusbar();
+
+    document.getElementById("statFields").textContent = stats.fields;
+    document.getElementById("statDepth").textContent = stats.maxDepth;
+    document.getElementById("statSize").textContent = formatBytes(byteSize);
+    statsRow.style.display="flex";
+    treeBox.style.display="block";
+
+    // 渲染降级：体积或节点数超过阈值时退化为纯文本，避免 DOM 节点爆炸卡死渲染。
+    // 这是和"解析"完全独立的另一个瓶颈，JSON.parse 本身很快不代表渲染也会很快。
+    if(byteSize > LARGE_SIZE_BYTES || stats.nodes > LARGE_NODE_COUNT){
+      document.getElementById("statMode").textContent = "纯文本（大文件降级）";
+      renderPlain(data);
+    } else {
+      document.getElementById("statMode").textContent = "树形";
+      renderTree(data);
+    }
+  }
+
+  document.getElementById("btnParse").addEventListener("click", doParse);
+
+  document.getElementById("btnCompress").addEventListener("click", function(){
+    if(state.data===null){ showToast("请先解析一次 JSON"); return; }
+    inputEl.value = JSON.stringify(state.data);
+    showToast("已压缩为单行");
+  });
+
+  document.getElementById("btnExpandAll").addEventListener("click", function(){
+    setAllCollapsed(false);
+  });
+  document.getElementById("btnCollapseAll").addEventListener("click", function(){
+    setAllCollapsed(true);
+  });
+
+  document.getElementById("btnCopy").addEventListener("click", function(){
+    if(state.data===null){ showToast("没有可复制的内容"); return; }
+    navigator.clipboard.writeText(JSON.stringify(state.data, null, 2)).then(function(){
+      showToast("已复制到剪贴板");
+    });
+  });
+
+  document.getElementById("btnClear").addEventListener("click", function(){
+    inputEl.value="";
+    hideError();
+    statsRow.style.display="none";
+    treeBox.style.display="none";
+    state.data=null; state.raw=""; state.fieldCount=0;
+    updateStatusbar();
+  });
+
+  /* =====================================================
+     Tab 2：Schema（校验 / 生成，全部本地规则，不调用 AI）
+     ===================================================== */
+
+  var modeValidateBtn = document.getElementById("modeValidate");
+  var modeGenerateBtn = document.getElementById("modeGenerate");
+  var validateUI = document.getElementById("schemaValidateUI");
+  var generateUI = document.getElementById("schemaGenerateUI");
+
+  [modeValidateBtn, modeGenerateBtn].forEach(function(btn){
+    btn.addEventListener("click", function(){
+      modeValidateBtn.classList.toggle("on", btn===modeValidateBtn);
+      modeGenerateBtn.classList.toggle("on", btn===modeGenerateBtn);
+      validateUI.style.display = btn===modeValidateBtn ? "block":"none";
+      generateUI.style.display = btn===modeGenerateBtn ? "block":"none";
+    });
+  });
+
+  // ---- 校验模式：JSON Schema Draft-07 子集 ----
+  // 支持：type / required / properties / items / enum /
+  //       minLength / maxLength / minimum / maximum
+  // 不支持：$ref / allOf / oneOf / 自定义 format 校验等完整规范特性
+  function validateAgainstSchema(data, schema, path){
+    path = path || "$";
+    var errors = [];
+
+    function typeOf(v){
+      if(v===null) return "null";
+      if(Array.isArray(v)) return "array";
+      return typeof v; // string/number/boolean/object
+    }
+
+    if(schema.type){
+      var actual = typeOf(data);
+      var expected = schema.type;
+      var ok = (expected==="integer") ? (actual==="number" && Number.isInteger(data)) : actual===expected;
+      if(!ok){
+        errors.push({path:path, msg:"类型不匹配：期望 "+expected+"，实际是 "+actual});
+        return errors; // 类型都不对，子字段没法继续比较
+      }
+    }
+
+    if(schema.enum && schema.enum.indexOf(data)===-1){
+      errors.push({path:path, msg:"值不在枚举范围内：["+schema.enum.join(", ")+"]"});
+    }
+
+    if(typeof data==="string"){
+      if(schema.minLength!==undefined && data.length<schema.minLength)
+        errors.push({path:path, msg:"字符串长度 "+data.length+" 小于 minLength "+schema.minLength});
+      if(schema.maxLength!==undefined && data.length>schema.maxLength)
+        errors.push({path:path, msg:"字符串长度 "+data.length+" 大于 maxLength "+schema.maxLength});
+    }
+
+    if(typeof data==="number"){
+      if(schema.minimum!==undefined && data<schema.minimum)
+        errors.push({path:path, msg:"数值 "+data+" 小于 minimum "+schema.minimum});
+      if(schema.maximum!==undefined && data>schema.maximum)
+        errors.push({path:path, msg:"数值 "+data+" 大于 maximum "+schema.maximum});
+    }
+
+    if(schema.required && Array.isArray(schema.required) && data && typeOf(data)==="object"){
+      schema.required.forEach(function(key){
+        if(!(key in data)){
+          errors.push({path:path+"."+key, msg:"缺少必填字段"});
+        }
+      });
+    }
+
+    if(schema.properties && data && typeOf(data)==="object"){
+      Object.keys(schema.properties).forEach(function(key){
+        if(key in data){
+          errors = errors.concat(validateAgainstSchema(data[key], schema.properties[key], path+"."+key));
+        }
+      });
+    }
+
+    if(schema.items && Array.isArray(data)){
+      data.forEach(function(item, i){
+        errors = errors.concat(validateAgainstSchema(item, schema.items, path+"["+i+"]"));
+      });
+    }
+
+    return errors;
+  }
+
+  document.getElementById("btnValidate").addEventListener("click", function(){
+    var resultBox = document.getElementById("validateResult");
+    if(state.data===null){
+      resultBox.innerHTML = '<div class="err-banner show">请先在「格式化」Tab 输入并解析一份 JSON</div>';
+      return;
+    }
+    var schemaRaw = document.getElementById("schemaInput").value;
+    var schema;
+    try{
+      schema = JSON.parse(schemaRaw);
+    }catch(err){
+      resultBox.innerHTML = '<div class="err-banner show">Schema 本身不是合法 JSON：'+esc(err.message)+'</div>';
+      return;
+    }
+
+    state.lastTab = "Schema-校验";
+    updateStatusbar();
+
+    var errors = validateAgainstSchema(state.data, schema, "$");
+    if(errors.length===0){
+      resultBox.innerHTML = '<div class="field-row" style="border-color:var(--ok);background:var(--ok-bg);">✅ 校验通过，数据符合该 Schema</div>';
+    }else{
+      resultBox.innerHTML = '<p style="font-size:13px;color:var(--err);margin:0 0 8px;">发现 '+errors.length+' 处不匹配：</p>'+
+        errors.map(function(e){
+          return '<div class="field-row bad"><span class="path">'+esc(e.path)+'</span><span>'+esc(e.msg)+'</span></div>';
+        }).join("");
+    }
+  });
+
+  // ---- 生成模式：从示例 JSON 本地推断 Schema 草稿 ----
+  function inferType(v){
+    if(v===null) return "null";
+    if(Array.isArray(v)) return "array";
+    if(typeof v==="number") return Number.isInteger(v) ? "integer" : "number";
+    return typeof v; // string/boolean/object
+  }
+
+  function looksLikeFormat(s){
+    if(/^\d{4}-\d{2}-\d{2}([T ]\d{2}:\d{2}:\d{2})?/.test(s)) return "date-time";
+    if(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s)) return "email";
+    if(/^https?:\/\//.test(s)) return "uri";
+    return null;
+  }
+
+  // samples: 同一路径下收集到的所有示例值，用于判断字段是否必填/类型是否一致
+  function inferSchema(samples){
+    var types = {};
+    samples.forEach(function(v){ types[inferType(v)] = true; });
+    var typeList = Object.keys(types);
+    var ambiguous = typeList.length > 1;
+
+    var node = { type: ambiguous ? typeList : typeList[0] };
+
+    if(typeList.indexOf("string")!==-1){
+      var fmts = {};
+      samples.forEach(function(v){
+        if(typeof v==="string"){
+          var f = looksLikeFormat(v);
+          if(f) fmts[f]=true;
+        }
+      });
+      var fmtKeys = Object.keys(fmts);
+      if(fmtKeys.length===1) node.format = fmtKeys[0];
+    }
+
+    if(typeList.indexOf("object")!==-1){
+      var objSamples = samples.filter(function(v){ return v && typeof v==="object" && !Array.isArray(v); });
+      var allKeys = {};
+      objSamples.forEach(function(o){ Object.keys(o).forEach(function(k){ allKeys[k]=true; }); });
+      var props = {};
+      var required = [];
+      Object.keys(allKeys).forEach(function(k){
+        var presentInAll = objSamples.every(function(o){ return k in o; });
+        if(presentInAll) required.push(k);
+        var childSamples = objSamples.filter(function(o){ return k in o; }).map(function(o){ return o[k]; });
+        var childResult = inferSchema(childSamples);
+        props[k] = childResult.node;
+        if(childResult.ambiguousFields.length){
+          // 把子字段的歧义往上传递，路径前面加上当前 key
+        }
+      });
+      node.properties = props;
+      if(required.length) node.required = required;
+    }
+
+    if(typeList.indexOf("array")!==-1){
+      var arrSamples = samples.filter(function(v){ return Array.isArray(v); });
+      var itemSamples = [];
+      arrSamples.forEach(function(a){ itemSamples = itemSamples.concat(a); });
+      if(itemSamples.length){
+        node.items = inferSchema(itemSamples).node;
+      }
+    }
+
+    return { node: node, ambiguousFields: ambiguous ? ["(此节点)"] : [] };
+  }
+
+  // 收集"⚠️待人工确认"字段列表，用于在 UI 上单独展示，而不是只把结果埋进 JSON 里
+  // samples 截断到前8条，给💡按钮调AI时用——这是该功能里唯一会把真实数据值发出去的地方，
+  // 且只发这一个字段的样本，不是全量数据，按钮本身也是用户主动点击才触发
+  function collectAmbiguousFields(data, path, list){
+    path = path || "$";
+    if(data && typeof data==="object" && !Array.isArray(data)){
+      Object.keys(data).forEach(function(k){
+        collectAmbiguousFields(data[k], path+"."+k, list);
+      });
+    }
+    if(Array.isArray(data) && data.length>1){
+      var types = {};
+      data.forEach(function(v){ types[inferType(v)]=true; });
+      if(Object.keys(types).length>1){
+        list.push({path:path+"[*]", reason:"数组内元素类型不一致："+Object.keys(types).join(" / "), samples:data.slice(0,8)});
+      }
+      data.forEach(function(v,i){ collectAmbiguousFields(v, path+"["+i+"]", list); });
+    }
+    return list;
+  }
+
+  var lastAmbiguousList = []; // 供💡按钮的点击事件回查 path+samples
+
+  document.getElementById("btnGenerate").addEventListener("click", function(){
+    var resultBox = document.getElementById("generateResult");
+    var outputEl = document.getElementById("schemaOutput");
+    var copyBtn = document.getElementById("btnCopySchema");
+
+    if(state.data===null){
+      resultBox.innerHTML = '<div class="err-banner show">请先在「格式化」Tab 输入并解析一份 JSON</div>';
+      outputEl.style.display="none";
+      copyBtn.style.display="none";
+      return;
+    }
+
+    state.lastTab = "Schema-生成";
+    updateStatusbar();
+
+    var result = inferSchema([state.data]);
+    var schemaDraft = Object.assign({ "$schema": "http://json-schema.org/draft-07/schema#" }, result.node);
+    var ambiguousList = collectAmbiguousFields(state.data, "$", []);
+    lastAmbiguousList = ambiguousList;
+
+    var html = "";
+    if(ambiguousList.length){
+      html += '<p style="font-size:13px;color:var(--warn);margin:0 0 8px;">⚠️ 以下 '+ambiguousList.length+' 处推断置信度较低，建议人工确认：</p>';
+      html += ambiguousList.map(function(a, idx){
+        return '<div class="field-row warn">'+
+                 '<span class="amb-info"><span class="path">'+esc(a.path)+'</span> <span>'+esc(a.reason)+'</span></span>'+
+                 '<button class="btn ai-mini-btn" data-amb-ask="'+idx+'">💡 问AI</button>'+
+               '</div>'+
+               '<div class="ai-suggestion" id="ambSuggestion'+idx+'" style="display:none;"></div>';
+      }).join("");
+      html += '<p class="ai-hint">💡按钮会把该字段的示例取值（最多8条）发给 AI 协助判断，其余字段不受影响。</p>';
+    }else{
+      html += '<div class="field-row" style="border-color:var(--ok);background:var(--ok-bg);">✅ 字段类型推断一致，没有发现明显歧义</div>';
+    }
+    resultBox.innerHTML = html;
+
+    outputEl.value = JSON.stringify(schemaDraft, null, 2);
+    outputEl.style.display="block";
+    copyBtn.style.display="inline-block";
+  });
+
+  document.getElementById("btnCopySchema").addEventListener("click", function(){
+    var outputEl = document.getElementById("schemaOutput");
+    navigator.clipboard.writeText(outputEl.value).then(function(){
+      showToast("Schema 已复制到剪贴板");
+    });
+  });
+
+  // ---- 💡问AI：低置信度字段的人工辅助判断（仅发该字段的样本值，可选触发） ----
+  document.getElementById("generateResult").addEventListener("click", function(e){
+    var btn = e.target.closest("[data-amb-ask]");
+    if(!btn) return;
+    var idx = parseInt(btn.dataset.ambAsk, 10);
+    var item = lastAmbiguousList[idx];
+    if(!item) return;
+
+    var suggestionBox = document.getElementById("ambSuggestion"+idx);
+    var originalText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = "思考中...";
+
+    var systemPrompt = "你是数据建模专家。用户给出了某个JSON字段在多个真实示例中的取值，这些值的类型不一致。" +
+      "请用一两句话给出明确建议：这个字段应该统一成什么类型/格式，并简要说明判断依据。直接给结论，不要客套话，不要重复用户的问题。";
+    var userPrompt = "字段路径：" + item.path + "\n该字段的示例取值：" + JSON.stringify(item.samples);
+
+    callAI(systemPrompt, userPrompt).then(function(result){
+      btn.disabled = false;
+      btn.textContent = originalText;
+      suggestionBox.textContent = "💬 " + result.trim();
+      suggestionBox.style.display = "block";
+    }).catch(function(err){
+      btn.disabled = false;
+      btn.textContent = originalText;
+      if(err.message !== "请先设置 API Key"){
+        showToast("AI 建议获取失败：" + err.message);
+      }
+    });
+  });
+
+  /* =====================================================
+     Tab 3：查询（JSONPath 子集，本地实时执行）
+     ===================================================== */
+
+  // ---- 解析器：把表达式切成 token 序列 ----
+  // 支持：$ / .key / [index] / [*] / ..key（递归下降） / ['key'] / 基础filter [?(@.x<10)]
+  // 不支持：完整 JQ 语法、复杂脚本表达式、函数调用——这是有意的范围控制，不是漏做
+  function tokenizePath(expr){
+    var s = expr.trim();
+    if(s[0] !== "$") throw new Error("JSONPath 必须以 $ 开头");
+    var tokens = [{type:"root"}];
+    var i = 1;
+    while(i < s.length){
+      var rest = s.slice(i);
+      var m;
+      if(m = /^\.\.([a-zA-Z_$][\w$]*)/.exec(rest)){
+        tokens.push({type:"recursive", key:m[1]}); i += m[0].length;
+      } else if(m = /^\.([a-zA-Z_$][\w$]*)/.exec(rest)){
+        tokens.push({type:"child", key:m[1]}); i += m[0].length;
+      } else if(m = /^\[\*\]/.exec(rest)){
+        tokens.push({type:"wildcard"}); i += m[0].length;
+      } else if(m = /^\[(\d+)\]/.exec(rest)){
+        tokens.push({type:"index", index:parseInt(m[1],10)}); i += m[0].length;
+      } else if(m = /^\['([^']+)'\]/.exec(rest)){
+        tokens.push({type:"child", key:m[1]}); i += m[0].length;
+      } else if(m = /^\[\?\(@\.([a-zA-Z_$][\w$]*)\s*(==|!=|>=|<=|>|<)\s*("[^"]*"|'[^']*'|-?\d+(\.\d+)?|true|false|null)\)\]/.exec(rest)){
+        var rawVal = m[3], val;
+        if(/^".*"$/.test(rawVal) || /^'.*'$/.test(rawVal)) val = rawVal.slice(1,-1);
+        else if(rawVal==="true") val = true;
+        else if(rawVal==="false") val = false;
+        else if(rawVal==="null") val = null;
+        else val = parseFloat(rawVal);
+        tokens.push({type:"filter", field:m[1], op:m[2], value:val}); i += m[0].length;
+      } else {
+        throw new Error("无法解析的表达式片段：「"+rest.slice(0,15)+"」");
+      }
+    }
+    return tokens;
+  }
+
+  function comparePathOp(a, op, b){
+    switch(op){
+      case "==": return a == b;
+      case "!=": return a != b;
+      case ">":  return a > b;
+      case "<":  return a < b;
+      case ">=": return a >= b;
+      case "<=": return a <= b;
+    }
+    return false;
+  }
+
+  // ---- 求值器：沿 token 序列逐步收窄候选集合，返回 [{path, value}, ...] ----
+  function evaluateJSONPath(data, expr){
+    var tokens = tokenizePath(expr); // 语法错误在这里直接抛出
+    var current = [{path:"$", value:data}];
+    for(var ti=1; ti<tokens.length; ti++){
+      var tok = tokens[ti];
+      var next = [];
+      current.forEach(function(item){
+        var v = item.value;
+        if(tok.type==="child"){
+          if(v && typeof v==="object" && !Array.isArray(v) && Object.prototype.hasOwnProperty.call(v, tok.key)){
+            next.push({path: item.path+"."+tok.key, value: v[tok.key]});
+          }
+        } else if(tok.type==="index"){
+          if(Array.isArray(v) && tok.index < v.length){
+            next.push({path: item.path+"["+tok.index+"]", value: v[tok.index]});
+          }
+        } else if(tok.type==="wildcard"){
+          if(Array.isArray(v)){
+            v.forEach(function(child, idx){ next.push({path:item.path+"["+idx+"]", value:child}); });
+          } else if(v && typeof v==="object"){
+            Object.keys(v).forEach(function(k){ next.push({path:item.path+"."+k, value:v[k]}); });
+          }
+        } else if(tok.type==="recursive"){
+          // 在当前 item 的整个子树里递归查找所有名为 tok.key 的字段，不限深度
+          (function walk(val, path){
+            if(val && typeof val==="object"){
+              if(!Array.isArray(val) && Object.prototype.hasOwnProperty.call(val, tok.key)){
+                next.push({path: path+"."+tok.key, value: val[tok.key]});
+              }
+              if(Array.isArray(val)){
+                val.forEach(function(child, idx){ walk(child, path+"["+idx+"]"); });
+              } else {
+                Object.keys(val).forEach(function(k){ walk(val[k], path+"."+k); });
+              }
+            }
+          })(v, item.path);
+        } else if(tok.type==="filter"){
+          // filter 可能直接跟在数组后面（需要先展开数组逐项判断），
+          // 也可能跟在 wildcard 展开后的单个对象后面（直接判断当前对象）。
+          // 这两种情况都要处理，漏掉前者是开发阶段实测时抓到的真实bug。
+          if(Array.isArray(v)){
+            v.forEach(function(child, idx){
+              if(child && typeof child==="object" && Object.prototype.hasOwnProperty.call(child, tok.field)){
+                if(comparePathOp(child[tok.field], tok.op, tok.value)){
+                  next.push({path: item.path+"["+idx+"]", value: child});
+                }
+              }
+            });
+          } else if(v && typeof v==="object" && Object.prototype.hasOwnProperty.call(v, tok.field)){
+            if(comparePathOp(v[tok.field], tok.op, tok.value)) next.push(item);
+          }
+        }
+      });
+      current = next;
+    }
+    return current;
+  }
+
+  // ---- 历史记录（localStorage，最近5条） ----
+  var HISTORY_KEY = "jtr-json-path-history";
+  function getHistory(){
+    try{ return JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]"); }catch(e){ return []; }
+  }
+  function pushHistory(expr){
+    var hist = getHistory().filter(function(h){ return h!==expr; });
+    hist.unshift(expr);
+    hist = hist.slice(0,5);
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(hist));
+    renderHistory();
+  }
+  function renderHistory(){
+    var row = document.getElementById("historyRow");
+    var hist = getHistory();
+    if(!hist.length){ row.innerHTML=""; return; }
+    row.innerHTML = '<span style="font-size:12px;color:var(--tx2);align-self:center;">历史：</span>' +
+      hist.map(function(h){ return '<span class="example-chip" data-fill="'+esc(h)+'">'+esc(h)+'</span>'; }).join("");
+  }
+
+  // ---- 示例表达式快捷按钮 ----
+  var PATH_EXAMPLES = ["$.a.b[0]", "$.a.b[*]", "$..price", "$.list[?(@.price<10)]"];
+  document.getElementById("exampleChips").innerHTML = PATH_EXAMPLES.map(function(ex){
+    return '<span class="example-chip" data-fill="'+esc(ex)+'">'+esc(ex)+'</span>';
+  }).join("");
+
+  document.addEventListener("click", function(e){
+    var chip = e.target.closest("[data-fill]");
+    if(!chip) return;
+    if(!chip.closest("#panel-query")) return;
+    document.getElementById("pathInput").value = chip.dataset.fill;
+    runQuery();
+  });
+
+  // ---- 查询Tab的树渲染 + 路径→DOM元素映射（用于hover定位，不走CSS选择器拼字符串，避免特殊字符转义问题） ----
+  var queryPathToEl = {};
+  function renderQueryTree(){
+    var box = document.getElementById("queryTreeBox");
+    if(state.data===null){ box.innerHTML=""; return; }
+
+    var stats = walkStats(state.data, 0);
+    var byteSize = new Blob([state.raw]).size;
+    if(byteSize > LARGE_SIZE_BYTES || stats.nodes > LARGE_NODE_COUNT){
+      box.classList.add("plain");
+      box.textContent = "（数据量较大，已跳过可视化树形定位，仅展示左侧结果列表）";
+      queryPathToEl = {};
+      return;
+    }
+    box.classList.remove("plain");
+    box.innerHTML = renderValue(state.data, "", true, 0, "$");
+    queryPathToEl = {};
+    box.querySelectorAll("[data-path]").forEach(function(el){
+      queryPathToEl[el.getAttribute("data-path")] = el;
+    });
+  }
+
+  // 查询树同样支持折叠/展开交互（独立于 Tab1 的事件委托）
+  document.getElementById("queryTreeBox").addEventListener("click", function(e){
+    var toggle = e.target.closest("[data-toggle]");
+    if(!toggle) return;
+    var row = toggle.closest(".node-row");
+    var children = row.nextElementSibling;
+    var hint = row.querySelector(".collapsed-hint");
+    if(!children || !children.classList.contains("children")) return;
+    var willHide = !children.classList.contains("hidden");
+    children.classList.toggle("hidden");
+    toggle.textContent = willHide ? "▶" : "▼";
+    if(hint) hint.style.display = willHide ? "inline" : "none";
+  });
+
+  function previewValue(v){
+    if(v===null) return "null";
+    if(typeof v==="object") return Array.isArray(v) ? ("[Array, "+v.length+" 项]") : ("{Object, "+Object.keys(v).length+" 键}");
+    if(typeof v==="string") return '"'+v+'"';
+    return String(v);
+  }
+
+  function runQuery(){
+    var expr = document.getElementById("pathInput").value.trim();
+    var errBox = document.getElementById("pathErrBanner");
+    var resultList = document.getElementById("resultList");
+    var countLabel = document.getElementById("resultCountLabel");
+
+    errBox.classList.remove("show");
+
+    if(state.data===null){
+      errBox.textContent = "请先在「格式化」Tab 输入并解析一份 JSON";
+      errBox.classList.add("show");
+      resultList.innerHTML=""; countLabel.textContent="0";
+      return;
+    }
+    if(!expr){
+      resultList.innerHTML=""; countLabel.textContent="0";
+      return;
+    }
+
+    var results;
+    try{
+      results = evaluateJSONPath(state.data, expr);
+    }catch(err){
+      errBox.textContent = "表达式错误："+err.message;
+      errBox.classList.add("show");
+      resultList.innerHTML=""; countLabel.textContent="0";
+      return;
+    }
+
+    state.lastTab = "查询";
+    updateStatusbar();
+    pushHistory(expr);
+
+    countLabel.textContent = results.length;
+
+    // 高亮所有匹配节点（实时高亮，所见即所得）
+    Object.keys(queryPathToEl).forEach(function(p){ queryPathToEl[p].classList.remove("matched"); });
+    results.forEach(function(r){
+      if(queryPathToEl[r.path]) queryPathToEl[r.path].classList.add("matched");
+    });
+
+    if(results.length===0){
+      resultList.innerHTML = '<div class="result-row" style="cursor:default;color:var(--tx2);">没有匹配的节点</div>';
+      return;
+    }
+
+    resultList.innerHTML = results.slice(0,200).map(function(r, idx){
+      return '<div class="result-row" data-result-path="'+esc(r.path)+'">'+
+               '<span class="rpath">'+esc(r.path)+'</span>'+
+               '<span class="rval">'+esc(previewValue(r.value))+'</span>'+
+             '</div>';
+    }).join("");
+    if(results.length>200){
+      resultList.innerHTML += '<div class="result-count">仅展示前200条，共'+results.length+'条匹配</div>';
+    }
+  }
+
+  // hover 结果行 → 左侧树自动定位并闪烁高亮（复用⑬的"字符位置/节点定位+高亮联动"经验，
+  // 这里用直接的 path→DOM 引用映射，而不是拼接 CSS 选择器字符串，规避特殊字符转义风险）
+  document.getElementById("resultList").addEventListener("mouseover", function(e){
+    var row = e.target.closest("[data-result-path]");
+    if(!row) return;
+    var path = row.dataset.resultPath;
+    var el = queryPathToEl[path];
+    if(!el) return;
+    el.scrollIntoView({block:"center", behavior:"smooth"});
+    el.classList.remove("flash");
+    void el.offsetWidth; // 强制重排，让动画能重新触发
+    el.classList.add("flash");
+  });
+
+  document.getElementById("resultList").addEventListener("click", function(e){
+    var row = e.target.closest("[data-result-path]");
+    if(!row) return;
+    navigator.clipboard.writeText(row.dataset.resultPath).then(function(){
+      showToast("路径已复制："+row.dataset.resultPath);
+    });
+  });
+
+  // 输入即查询，debounce 250ms 防止大数据量时频繁重渲染
+  var queryDebounceTimer = null;
+  document.getElementById("pathInput").addEventListener("input", function(){
+    clearTimeout(queryDebounceTimer);
+    queryDebounceTimer = setTimeout(runQuery, 250);
+  });
+
+  // 切到「查询」Tab 时，按当前共享数据重建一次树（因为查询Tab的树是独立渲染的，
+  // 不是和 Tab1 共享同一份 DOM——这是有意的架构选择，见 PRD 决策记录）
+  document.querySelector('.tab-btn[data-tab="query"]').addEventListener("click", function(){
+    renderQueryTree();
+    if(document.getElementById("pathInput").value.trim()) runQuery();
+  });
+
+  renderHistory();
+
+  // ---- 自然语言 → JSONPath（可选AI功能，仅发结构骨架不发真实数据） ----
+  document.getElementById("btnNlGenerate").addEventListener("click", function(){
+    var nlInput = document.getElementById("nlQueryInput");
+    var nlText = nlInput.value.trim();
+    var btn = document.getElementById("btnNlGenerate");
+    var errBox = document.getElementById("pathErrBanner");
+
+    if(state.data===null){
+      errBox.textContent = "请先在「格式化」Tab 输入并解析一份 JSON";
+      errBox.classList.add("show");
+      return;
+    }
+    if(!nlText){
+      showToast("请先描述你想查询的内容");
+      return;
+    }
+
+    var skeleton = buildStructureSkeleton(state.data);
+    var systemPrompt = "你是 JSONPath 专家。根据给定的 JSON 结构骨架（只含字段名和类型，不含真实数据），" +
+      "把用户的自然语言需求转换成一个 JSONPath 表达式。" +
+      "只支持这些语法：$ 根节点、.key 取字段、[index] 取下标、[*] 通配符、..key 递归下降、" +
+      "基础过滤 [?(@.field<value)]（支持 == != > < >= <=）。" +
+      "只输出表达式本身一行文本，不要解释，不要使用 markdown 代码块标记。";
+    var userPrompt = "JSON结构骨架：\n" + skeleton + "\n\n用户需求：" + nlText;
+
+    btn.disabled = true;
+    btn.textContent = "生成中...";
+
+    callAI(systemPrompt, userPrompt).then(function(result){
+      btn.disabled = false;
+      btn.textContent = "✨ AI 生成表达式";
+
+      // 去掉可能的markdown代码块包裹和多余空白，再用本地解析器校验一遍——
+      // AI输出不可信任，必须经过已有的tokenizePath验证才能接受，这是本地规则对AI输出的安全网
+      var expr = result.replace(/```[a-z]*\n?/gi, "").replace(/```/g, "").trim().split("\n")[0].trim();
+
+      try{
+        tokenizePath(expr); // 只是校验语法，不需要结果
+      }catch(parseErr){
+        errBox.textContent = "AI 生成的表达式本地校验未通过：「"+expr+"」（"+parseErr.message+"），请换一种描述方式重试";
+        errBox.classList.add("show");
+        return;
+      }
+
+      document.getElementById("pathInput").value = expr;
+      runQuery();
+      showToast("已生成并执行：" + expr);
+    }).catch(function(err){
+      btn.disabled = false;
+      btn.textContent = "✨ AI 生成表达式";
+      if(err.message !== "请先设置 API Key"){
+        showToast("AI 生成失败：" + err.message);
+      }
+    });
+  });
+
+  /* =====================================================
+     Tab 4：Diff（结构化对比，本地算法，不调用 AI）
+     ===================================================== */
+
+  function diffTypeOf(v){
+    if(v===null) return "null";
+    if(Array.isArray(v)) return "array";
+    return typeof v;
+  }
+
+  function unionKeys(a, b){
+    var keys = Object.keys(a);
+    var seen = {}; keys.forEach(function(k){ seen[k]=true; });
+    Object.keys(b).forEach(function(k){ if(!seen[k]){ keys.push(k); seen[k]=true; } });
+    return keys;
+  }
+
+  // 整个子树统一标记为 added/removed（比如B里全新出现的一整个对象，
+  // 子树里每个叶子都要单独标记，不能只标记容器本身——这是11号测试场景专门验证过的边界情况
+  function buildPureNode(v, status){
+    var t = diffTypeOf(v);
+    if(t==="object"){
+      var children = Object.keys(v).map(function(k){ return {key:k, node: buildPureNode(v[k], status)}; });
+      return {kind:"object", status:status, children:children};
+    }
+    if(t==="array"){
+      var children = v.map(function(item,i){ return {key:i, node: buildPureNode(item, status)}; });
+      return {kind:"array", status:status, children:children};
+    }
+    return {kind:"leaf", status:status, oldValue: status==="removed"?v:undefined, newValue: status==="added"?v:undefined};
+  }
+
+  // 简化版结构化diff：按key比较对象，数组按下标对齐（不做LCS重对齐）。
+  // 如果后续发现数组重排场景很常见，这里是升级点，但P2先验证简化版够不够用。
+  function buildDiffTree(a, b, presentA, presentB){
+    presentA = presentA===undefined ? true : presentA;
+    presentB = presentB===undefined ? true : presentB;
+
+    if(!presentA && presentB) return buildPureNode(b, "added");
+    if(presentA && !presentB) return buildPureNode(a, "removed");
+
+    var ta = diffTypeOf(a), tb = diffTypeOf(b);
+    if(ta !== tb){
+      // 类型都变了（比如number变string），直接当作modified叶子，不继续往下比较结构
+      return {kind:"leaf", status:"modified", oldValue:a, newValue:b};
+    }
+    if(ta==="object"){
+      var keys = unionKeys(a,b);
+      var children=[]; var anyChanged=false;
+      keys.forEach(function(k){
+        var inA = Object.prototype.hasOwnProperty.call(a,k);
+        var inB = Object.prototype.hasOwnProperty.call(b,k);
+        var childNode = buildDiffTree(a[k], b[k], inA, inB);
+        children.push({key:k, node:childNode});
+        if(childNode.status!=="unchanged") anyChanged=true;
+      });
+      return {kind:"object", status: anyChanged?"mixed":"unchanged", children:children};
+    }
+    if(ta==="array"){
+      var maxLen = Math.max(a.length, b.length);
+      var children=[]; var anyChanged=false;
+      for(var i=0;i<maxLen;i++){
+        var inA = i<a.length, inB = i<b.length;
+        var childNode = buildDiffTree(a[i], b[i], inA, inB);
+        children.push({key:i, node:childNode});
+        if(childNode.status!=="unchanged") anyChanged=true;
+      }
+      return {kind:"array", status: anyChanged?"mixed":"unchanged", children:children};
+    }
+    if(a===b) return {kind:"leaf", status:"unchanged", oldValue:a, newValue:b};
+    return {kind:"leaf", status:"modified", oldValue:a, newValue:b};
+  }
+
+  function countDiffStatuses(node, counts){
+    counts = counts || {added:0, removed:0, modified:0, unchanged:0};
+    if(node.kind==="leaf"){ counts[node.status]++; }
+    else { node.children.forEach(function(c){ countDiffStatuses(c.node, counts); }); }
+    return counts;
+  }
+
+  function formatLeaf(v){
+    if(v===undefined) return "";
+    if(v===null) return "null";
+    if(typeof v==="string") return '"'+v+'"';
+    return String(v);
+  }
+
+  // 判断某节点在"仅看差异"模式下是否还应该渲染（容器要看子节点里有没有任何会渲染的）
+  function diffNodeWillRender(node, onlyDiff){
+    if(!onlyDiff) return true;
+    if(node.kind==="leaf") return node.status !== "unchanged";
+    if(node.status==="added" || node.status==="removed") return true;
+    return node.children.some(function(c){ return diffNodeWillRender(c.node, onlyDiff); });
+  }
+
+  function renderDiffNode(node, keyHtml, isLast, depth, onlyDiff){
+    var comma = isLast ? "" : '<span class="punc">,</span>';
+
+    if(node.kind==="leaf"){
+      if(onlyDiff && node.status==="unchanged") return "";
+      var rowClass = "diff-row-"+node.status;
+      var valueHtml;
+      if(node.status==="added"){
+        valueHtml = '<span class="diff-added-val">'+esc(formatLeaf(node.newValue))+'</span>';
+      } else if(node.status==="removed"){
+        valueHtml = '<span class="diff-removed-val">'+esc(formatLeaf(node.oldValue))+'</span>';
+      } else if(node.status==="modified"){
+        valueHtml = '<span class="diff-old">'+esc(formatLeaf(node.oldValue))+'</span><span class="diff-arrow">→</span><span class="diff-new">'+esc(formatLeaf(node.newValue))+'</span>';
+      } else {
+        valueHtml = '<span class="diff-unchanged-val">'+esc(formatLeaf(node.newValue))+'</span>';
+      }
+      return '<div class="node-row '+rowClass+'"><span class="toggle leaf"></span>'+keyHtml+valueHtml+comma+'</div>';
+    }
+
+    var open = node.kind==="array" ? "[" : "{";
+    var close = node.kind==="array" ? "]" : "}";
+    var visibleChildren = node.children.filter(function(c){ return diffNodeWillRender(c.node, onlyDiff); });
+
+    if(visibleChildren.length===0){
+      if(onlyDiff) return ""; // 整个容器在仅看差异模式下没有任何可见内容，跳过
+      return '<div class="node-row diff-row-'+node.status+'"><span class="toggle leaf"></span>'+keyHtml+'<span class="punc">'+open+close+'</span>'+comma+'</div>';
+    }
+
+    var childrenHtml = visibleChildren.map(function(c, idx){
+      var childKeyHtml = node.kind==="array" ? "" : '<span class="k">"'+esc(c.key)+'"</span><span class="punc">: </span>';
+      var isLastChild = idx===visibleChildren.length-1;
+      return '<div class="node">'+renderDiffNode(c.node, childKeyHtml, isLastChild, depth+1, onlyDiff)+'</div>';
+    }).join("");
+
+    // 完全无变化的容器默认折叠（不管深度），mixed/added/removed的容器默认展开，方便第一眼看到差异在哪
+    var collapsedByDefault = node.status==="unchanged";
+    var hiddenClass = collapsedByDefault ? " hidden" : "";
+    var toggleChar = collapsedByDefault ? "▶" : "▼";
+    var rowClass2 = "diff-row-"+node.status;
+
+    return '<div class="node-row '+rowClass2+'">'+
+             '<span class="toggle" data-toggle>'+toggleChar+'</span>'+
+             keyHtml+
+             '<span class="punc">'+open+'</span>'+
+             '<span class="collapsed-hint" style="display:'+(collapsedByDefault?'inline':'none')+'"> '+visibleChildren.length+' 项无变化 </span>'+
+           '</div>'+
+           '<div class="children'+hiddenClass+'">'+childrenHtml+'</div>'+
+           '<div class="punc" style="margin-left:18px;">'+close+comma+'</div>';
+  }
+
+  var lastDiffTree = null; // 缓存上次对比结果，切换"仅看差异"开关时不用重新parse+diff
+
+  function renderDiffResult(){
+    var box = document.getElementById("diffTreeBox");
+    if(!lastDiffTree){ box.style.display="none"; return; }
+    var onlyDiff = document.getElementById("onlyDiffToggle").checked;
+    box.style.display = "block";
+    box.innerHTML = renderDiffNode(lastDiffTree, "", true, 0, onlyDiff);
+  }
+
+  document.getElementById("diffTreeBox").addEventListener("click", function(e){
+    var toggle = e.target.closest("[data-toggle]");
+    if(!toggle) return;
+    var row = toggle.closest(".node-row");
+    var children = row.nextElementSibling;
+    var hint = row.querySelector(".collapsed-hint");
+    if(!children || !children.classList.contains("children")) return;
+    var willHide = !children.classList.contains("hidden");
+    children.classList.toggle("hidden");
+    toggle.textContent = willHide ? "▶" : "▼";
+    if(hint) hint.style.display = willHide ? "inline" : "none";
+  });
+
+  document.getElementById("onlyDiffToggle").addEventListener("change", renderDiffResult);
+
+  document.getElementById("btnFillA").addEventListener("click", function(){
+    if(state.data===null){ showToast("请先在「格式化」Tab 解析一份数据"); return; }
+    document.getElementById("diffA").value = JSON.stringify(state.data, null, 2);
+  });
+  document.getElementById("btnFillB").addEventListener("click", function(){
+    if(state.data===null){ showToast("请先在「格式化」Tab 解析一份数据"); return; }
+    document.getElementById("diffB").value = JSON.stringify(state.data, null, 2);
+  });
+
+  document.getElementById("btnDiffRun").addEventListener("click", function(){
+    var errBox = document.getElementById("diffErrBanner");
+    errBox.classList.remove("show");
+
+    var rawA = document.getElementById("diffA").value;
+    var rawB = document.getElementById("diffB").value;
+
+    if(!rawA.trim() || !rawB.trim()){
+      errBox.textContent = "请在左右两栏都输入 JSON";
+      errBox.classList.add("show");
+      return;
+    }
+
+    var a, b;
+    try{ a = JSON.parse(rawA); }catch(err){
+      errBox.textContent = "左侧（A）JSON 解析失败："+err.message;
+      errBox.classList.add("show");
+      return;
+    }
+    try{ b = JSON.parse(rawB); }catch(err){
+      errBox.textContent = "右侧（B）JSON 解析失败："+err.message;
+      errBox.classList.add("show");
+      return;
+    }
+
+    state.lastTab = "Diff";
+    updateStatusbar();
+
+    lastDiffTree = buildDiffTree(a, b);
+    var counts = countDiffStatuses(lastDiffTree);
+
+    document.getElementById("cntAdded").textContent = counts.added;
+    document.getElementById("cntRemoved").textContent = counts.removed;
+    document.getElementById("cntModified").textContent = counts.modified;
+    document.getElementById("cntUnchanged").textContent = counts.unchanged;
+    document.getElementById("diffSummary").style.display = "flex";
+    document.getElementById("diffToggleRow").style.display = "flex";
+
+    renderDiffResult();
+
+    // 对比成功后收纳输入区，把纵向空间还给diff结果——
+    // 否则两个160px高的textarea会一直把结果挤到下面，看长一点的对比时体验很差
+    document.getElementById("diffInputFull").style.display = "none";
+    document.getElementById("diffInputCollapsed").style.display = "flex";
+    document.getElementById("diffCollapsedSummary").innerHTML =
+      "已对比：A "+rawA.length+" 字符 / B "+rawB.length+" 字符 · 新增"+counts.added+" 删除"+counts.removed+" 修改"+counts.modified;
+  });
+
+  document.getElementById("btnExpandDiffInput").addEventListener("click", function(){
+    document.getElementById("diffInputFull").style.display = "block";
+    document.getElementById("diffInputCollapsed").style.display = "none";
+  });
+
+  updateStatusbar();
+})();
+</script>
+</body>
+</html>
